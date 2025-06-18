@@ -1,0 +1,12 @@
+package com.carrental.repository;
+
+import com.carrental.entity.Car;
+import io.micronaut.data.annotation.Repository;
+import io.micronaut.data.repository.CrudRepository;
+
+import java.util.List;
+
+@Repository
+public interface CarRepository extends CrudRepository<Car, Long> {
+    List<Car> findByAvailability(boolean availability);
+}

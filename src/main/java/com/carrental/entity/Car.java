@@ -1,5 +1,6 @@
-package com.carrental.Entity;
+package com.carrental.entity;
 
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.inject.Singleton;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,19 +9,22 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @Singleton
+@Serdeable
 public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    private long id;
     @NotBlank
-    String model;
+    private String model;
     @NotBlank
-    String brand;
+    private String brand;
 
-    long pricePerDay;
-    boolean availability;
+    private BigDecimal pricePerDay;
+    private boolean availability = true;
 
 }

@@ -1,5 +1,6 @@
-package com.carrental.Entity;
+package com.carrental.entity;
 
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.inject.Singleton;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,17 +9,20 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Data
 @Singleton
+@Serdeable
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
     @NotBlank
     String username;
-
-    String role;
+    String password;
+    List<String> roles;
 
 }

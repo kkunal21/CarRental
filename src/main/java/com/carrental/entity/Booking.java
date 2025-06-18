@@ -1,22 +1,26 @@
-package com.carrental.Entity;
+package com.carrental.entity;
 
 import jakarta.inject.Singleton;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.NonNull;
+
+import java.math.BigDecimal;
 
 @Entity
 @Data
 @Singleton
 public class Booking {
 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    private Long id;
+    private Long carId;
     @NotNull
-    long userId;
-    long billAmount;
-    long no_of_days;
+    private Long userId;
+    private BigDecimal billAmount;
+    private Long no_of_days;
 }
