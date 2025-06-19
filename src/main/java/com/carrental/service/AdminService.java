@@ -6,6 +6,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Singleton
 public class AdminService {
@@ -26,9 +28,36 @@ public class AdminService {
         return carRepository.findByAvailability(false);
     }
 
-
-    public Car addCar(Car car){
-         return carRepository.save(car);
+    public List<Car> getAvailableCars(){
+        return carRepository.findByAvailability(true);
     }
+
+
+    public void addCar(Car car){
+          carRepository.save(car);
+    }
+
+    public Optional<Car> findById(Long id){
+        return carRepository.findById(id);
+    }
+
+    public Car updateCarDetails(Long id , Car updatedCar){
+
+        Car oldCar = carRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Car " + id + " not found"));
+
+            oldCar.setBrand(updatedCar.getBrand());
+            oldCar.setModel(updatedCar.getModel());
+            oldCar.setPricePerDay(updatedCar.getPricePerDay());
+
+            carRepository.save(oldCar);
+            return oldCar;
+    }
+
+    public void deleteCar(Long id){
+        Car car = carRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No Car found"));
+        carRepository.deleteById(id);
+    }
+
 
 }
