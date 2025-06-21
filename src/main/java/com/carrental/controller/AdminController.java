@@ -5,6 +5,8 @@ import com.carrental.entity.Car;
 import com.carrental.service.AdminService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import jakarta.inject.Inject;
 
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Controller("/admin")
+@Secured(SecurityRule.IS_AUTHENTICATED)
 public class AdminController {
 
     private final AdminService adminService;

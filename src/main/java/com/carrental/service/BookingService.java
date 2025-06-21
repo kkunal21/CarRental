@@ -6,12 +6,12 @@ import com.carrental.entity.Booking;
 import com.carrental.entity.Car;
 import com.carrental.repository.BookingRepository;
 import com.carrental.repository.CarRepository;
-import io.micronaut.http.server.exceptions.NotFoundException;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.util.NoSuchElementException;
 
 @Singleton
 public class BookingService {
@@ -32,9 +32,7 @@ public class BookingService {
     @Transactional
     public BookCarResponse bookMyCar(BookCarRequest request) {
         Car car  = carRepository.findById(request.getCarId())
-                .orElseThrow(() -> new NotFoundException());
-
-
+                .orElseThrow(() -> new NoSuchElementException("No Car Found"));
 
             if(car.isAvailability()) {
                 car.setAvailability(false);
@@ -59,5 +57,17 @@ public class BookingService {
             else{
                 throw new RuntimeException("Car not Available");
             }
+    }
+
+    public void returnCar(Long id){
+        Car car = carRepository.findById(id).orElseThrow(()->new NoSuchElementException("Car not found"));
+
+        if(!car.isAvailability()){
+            car.setAvailability(true);
+            carRepository.update(car);
+        }
+        else{
+            throw new RuntimeException("This Car was not booked");
+        }
     }
 }

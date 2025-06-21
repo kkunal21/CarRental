@@ -1,0 +1,45 @@
+micronaut:
+  application:
+    name: carRental
+  security:
+    enabled: true
+    basic-auth:
+      enabled: true
+    authentication: basic
+    endpoints:
+      login:
+        enabled: true
+    token:
+      jwt:
+        enabled: false
+    password:
+      encoder:
+        bcrypt:
+          enabled: false
+
+datasources:
+  default:
+    url: jdbc:mysql://localhost:3306/car_rental_db?serverTimezone=UTC
+    username: root
+    password: root@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    dialect: MYSQL
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+
+
+
+#datasources.default.url=jdbc:mysql://localhost:3306/car_rental_db?serverTimezone=UTC
+#datasources.default.username=root
+#datasources.default.password=
+#datasources.default.driver-class-name=com.mysql.cj.jdbc.Driver
+#datasources.default.dialect=MYSQL          # (db‑type is obsolete in Mn 4)
+#
+#
+#micronaut.application.name=carRental
+#jpa.default.properties.hibernate.hbm2ddl.auto=update

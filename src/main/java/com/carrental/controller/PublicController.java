@@ -8,9 +8,12 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import jakarta.inject.Inject;
 
 @Controller("/public")
+@Secured((SecurityRule.IS_ANONYMOUS))
 public class PublicController {
 
     private final UserService userService;
@@ -25,4 +28,6 @@ public class PublicController {
         userService.createUser(user);
         return HttpResponse.created("User Created");
     }
+
+
 }
