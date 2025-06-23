@@ -4,18 +4,23 @@ micronaut:
   security:
     enabled: true
     basic-auth:
-      enabled: true
-    authentication: basic
+      enabled: false
+    authentication: bearer
     endpoints:
       login:
         enabled: true
     token:
       jwt:
-        enabled: false
+        enabled: true
+        signatures:
+          secret: # <-- keep these two lines together
+            generator: #     (creates the bean named “generator”)
+              secret: ${JWT_SIGNATURE_SECRET:7f1e5b3e92c4e8d04a1f90877ae6ac3e9d68e3c99f8e1f2a4d675b75a389c1e3}
+              jws-algorithm: HS256
     password:
       encoder:
         bcrypt:
-          enabled: false
+          enabled: true
 
 datasources:
   default:

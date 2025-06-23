@@ -1,5 +1,6 @@
 package com.carrental.security;
 
+import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
@@ -22,4 +23,5 @@ public class AuthenticationProviderUserPassword<B> implements HttpRequestAuthent
         }
         return AuthenticationResponse.success(authRequest.getIdentity());
     }
+
 }

@@ -23,11 +23,14 @@ public class PublicController {
         this.userService = userService;
     }
 
-    @Post("/addUser")
+    @Post("/signUp")
     public HttpResponse<?> createNewUser(@Body User user){
         userService.createUser(user);
         return HttpResponse.created("User Created");
     }
+
+//    @Post("/login")
+//    public
 
 
 }
