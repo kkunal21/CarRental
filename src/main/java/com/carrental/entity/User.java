@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.util.List;
 
 @Entity
 @Data
@@ -23,6 +22,6 @@ public class User {
     @NotBlank
     String userName;
     String password;
-    List<String> roles;
+    String role;
 
 }

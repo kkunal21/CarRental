@@ -1,10 +1,12 @@
 package com.carrental.service;
 
 import com.carrental.entity.Car;
+import com.carrental.entity.User;
 import com.carrental.repository.CarRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;

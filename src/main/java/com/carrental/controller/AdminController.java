@@ -2,7 +2,9 @@ package com.carrental.controller;
 
 import com.carrental.entity.Car;
 
+import com.carrental.entity.User;
 import com.carrental.service.AdminService;
+import com.carrental.service.UserService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
 import io.micronaut.security.annotation.Secured;
@@ -14,15 +16,25 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Controller("/admin")
-@Secured(SecurityRule.IS_AUTHENTICATED)
+@Secured("ADMIN")
 public class AdminController {
 
     private final AdminService adminService;
 
+    private final UserService userService;;
+
 
     @Inject
-    public AdminController(AdminService adminService ){
+    public AdminController(AdminService adminService ,UserService userService){
         this.adminService = adminService;
+        this.userService = userService;
+
+
+    }
+    @Post("/AdminSignUp")
+    public HttpResponse<?> createNewAdmin(@Body User user) {
+        userService.createNewAdmin(user);
+        return HttpResponse.created("Admin Created");
 
     }
 
