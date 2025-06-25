@@ -51,6 +51,7 @@ public class AdminService {
             oldCar.setBrand(updatedCar.getBrand());
             oldCar.setModel(updatedCar.getModel());
             oldCar.setPricePerDay(updatedCar.getPricePerDay());
+            oldCar.setAvailability(updatedCar.isAvailability());
 
             carRepository.save(oldCar);
             return oldCar;

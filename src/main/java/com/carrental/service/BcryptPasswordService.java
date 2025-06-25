@@ -7,14 +7,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Singleton
 public class BcryptPasswordService implements PasswordEncoder {
 
-    private final PasswordEncoder delegate = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     @Override
     public String encode(CharSequence rawPassword) {
-        return delegate.encode(rawPassword);
+        return passwordEncoder.encode(rawPassword);
     }
 
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        return delegate.matches(rawPassword, encodedPassword);
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }
