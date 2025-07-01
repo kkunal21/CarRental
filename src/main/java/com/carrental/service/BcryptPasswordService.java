@@ -7,7 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Singleton
 public class BcryptPasswordService implements PasswordEncoder {
 
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder ;
+
+    public BcryptPasswordService(PasswordEncoder passwordEncoder){
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public String encode(CharSequence rawPassword) {
         return passwordEncoder.encode(rawPassword);

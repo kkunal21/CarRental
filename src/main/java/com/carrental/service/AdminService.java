@@ -46,7 +46,7 @@ public class AdminService {
     public Car updateCarDetails(Long id , Car updatedCar){
 
         Car oldCar = carRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Car " + id + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("Car not found"));
 
             oldCar.setBrand(updatedCar.getBrand());
             oldCar.setModel(updatedCar.getModel());

@@ -44,10 +44,10 @@ public class UserController {
     }
 
     @Post("/returnCar/{id}")
-    public HttpResponse<?> returnCar(@PathVariable Long id){
+    public HttpResponse<String> returnCar(@PathVariable Long id){
         try{
            bookingService.returnCar(id);
-           return HttpResponse.ok("Car Returned SuccessFully");
+           return HttpResponse.ok("Car Returned Successfully");
         }catch(NoSuchElementException e){
             return HttpResponse.notFound("Car Not found");
         }

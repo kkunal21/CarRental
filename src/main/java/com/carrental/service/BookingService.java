@@ -47,12 +47,9 @@ public class BookingService {
 
                 bookingRepository.save(booking);
 
-                BookCarResponse response = new BookCarResponse();
-                response.setBookingId(booking.getId());
-                response.setBillAmount(booking.getBillAmount());
-                response.setMessage("Car Booked SuccessFully");
-
-                return response;
+                BookCarResponse response;
+                response = new BookCarResponse(booking.getCarId(), booking.getBillAmount() , "Car Booked Successfully");
+                return  response;
             }
             else{
                 throw new RuntimeException("Car not Available");

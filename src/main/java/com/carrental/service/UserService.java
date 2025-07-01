@@ -1,5 +1,6 @@
 package com.carrental.service;
 
+import com.carrental.dto.LoginRequest;
 import com.carrental.entity.Car;
 import com.carrental.entity.User;
 import com.carrental.repository.CarRepository;
@@ -27,23 +28,24 @@ public class UserService {
         this.bcryptPasswordService = bcryptPasswordService;
     }
 
-    public void createNewUser(User user){
-        Optional<User> optionalUser = userRepository.findByUserName(user.getUserName());
+    public void createNewUser(LoginRequest loginRequest){
+        Optional<User> optionalUser = userRepository.findByUserName(loginRequest.getUserName());
         if(optionalUser.isPresent()){
              throw new RuntimeException("User Already Exist , Try singing in...");
         }
-        user.setPassword(bcryptPasswordService.encode(user.getPassword()));
-        user.setRole("USER");
+        String encodedPassword = bcryptPasswordService.encode(loginRequest.getPassword());
+       User user = new User(loginRequest.getUserName() , encodedPassword , "USER");
          userRepository.save(user);
     }
 
-    public void createNewAdmin(User user){
-        Optional<User> optionalUser = userRepository.findByUserName(user.getUserName());
+    public void createNewAdmin(LoginRequest request){
+
+        Optional<User> optionalUser = userRepository.findByUserName(request.getUserName());
         if(optionalUser.isPresent()){
             throw new RuntimeException("Admin Already Exist , Try singing in...");
         }
-        user.setPassword(bcryptPasswordService.encode(user.getPassword()));
-        user.setRole("ADMIN");
+        String encodedPassword = bcryptPasswordService.encode(request.getPassword());
+        User user = new User(request.getUserName() , encodedPassword, "ADMIN");
         userRepository.save(user);
     }
 

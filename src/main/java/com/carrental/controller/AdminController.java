@@ -1,5 +1,6 @@
 package com.carrental.controller;
 
+import com.carrental.dto.LoginRequest;
 import com.carrental.entity.Car;
 
 import com.carrental.entity.User;
@@ -32,9 +33,9 @@ public class AdminController {
 
     }
     @Post("/AdminSignUp")
-    public HttpResponse<?> createNewAdmin(@Body User user) {
-        userService.createNewAdmin(user);
-        return HttpResponse.created("Admin Created");
+    public HttpResponse<String> createNewAdmin(@Body LoginRequest request) {
+        userService.createNewAdmin(request);
+        return HttpResponse.created("Admin Created Successfully");
 
     }
 

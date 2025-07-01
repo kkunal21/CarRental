@@ -1,6 +1,7 @@
 package com.carrental.controller;
 
 
+import com.carrental.dto.LoginRequest;
 import com.carrental.entity.User;
 import com.carrental.repository.UserRepository;
 import com.carrental.service.UserService;
@@ -24,8 +25,8 @@ public class PublicController {
     }
 
     @Post("/userSignUp")
-    public HttpResponse<?> createNewUser(@Body User user) {
-        userService.createNewUser(user);
+    public HttpResponse<?> createNewUser(@Body LoginRequest loginRequest) {
+        userService.createNewUser(loginRequest);
         return HttpResponse.created("User Created");
 
     }
