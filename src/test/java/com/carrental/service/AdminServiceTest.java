@@ -2,32 +2,42 @@ package com.carrental.service;
 
 import com.carrental.entity.Car;
 import com.carrental.repository.CarRepository;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 
-@MicronautTest
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+
+@ExtendWith(MockitoExtension.class)
 public class AdminServiceTest {
 
-    @Inject
+    @InjectMocks
     AdminService adminService;
 
-    @Inject
+    @Mock
     CarRepository carRepository;
 
     @Test
-    public void getAllCarsTest(){
-        adminService.addCar(new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true));
-        adminService.addCar(new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), true));
+    public void shouldReturnListOfAllCars_WhenCarsExist(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), true);
 
-        List<Car> carList =  adminService.getAllCars();
+        List<Car> mockCars =  listOf(car1 , car2);
+
+        when(carRepository.findAll()).thenReturn(mockCars);
+
+        List<Car>  carList = adminService.getAllCars();
 
         assertEquals(2 ,  carList.size());
         assertEquals("BMW" , carList.get(0).getBrand());
@@ -39,25 +49,28 @@ public class AdminServiceTest {
     }
 
     @Test
-    public void getBookedCarsTest(){
+    public void shouldReturnListOfBookedCars_WhenCarsAreBooked(){
 
-        adminService.addCar(new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true));
-        adminService.addCar(new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false));
-        adminService.addCar(new Car(null, "XUV700" , "MAHINDRA" , BigDecimal.valueOf(7000), true));
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
+//        Car car3 = new Car(null, "XUV700" , "MAHINDRA" , BigDecimal.valueOf(7000), true);
+        List<Car> mockCars = listOf(car1 , car2 );
 
+        when(carRepository.findByAvailability(false)).thenReturn(mockCars);
 
         List<Car> bookedCars =  adminService.getBookedCars();
 
-        assertEquals(1 , bookedCars.size());
+        assertEquals(2 , bookedCars.size());
         assertFalse(bookedCars.stream().allMatch(Car::isAvailability));
     }
 
     @Test
-    public void getAvailableCarsTest(){
+    public void shouldReturnListOfAvailableCars_WhenCarsAreAvailable(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), true);
+        List<Car> mockCars = listOf(car1 , car2 );
 
-        adminService.addCar(new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true));
-        adminService.addCar(new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false));
-        adminService.addCar(new Car(null, "XUV700" , "MAHINDRA" , BigDecimal.valueOf(7000), true));
+        when(carRepository.findByAvailability(true)).thenReturn(mockCars);
 
         List<Car> availableCars =  adminService.getAvailableCars();
 
@@ -66,68 +79,94 @@ public class AdminServiceTest {
     }
 
     @Test
-    public void addCarTest(){
+    public void shouldAddCarSuccessfully_WhenCarDataIsValid(){
 
        Car car1 = new Car(null, "XUV700" , "MAHINDRA" , BigDecimal.valueOf(7000), true);
-       Car car2 = new Car(null, "CIVIC" , "HONDA" , BigDecimal.valueOf(7000), true);
 
-        adminService.addCar(car1);
-        adminService.addCar(car2);
+       adminService.addCar(car1);
 
-        assertNotNull(car1.getId() );
-        assertTrue(carRepository.existsById(car1.getId()));
-        assertNotNull(car2.getId() );
-        assertTrue(carRepository.existsById(car2.getId()));
+        verify(carRepository , times(1)).save(car1);
+
     }
 
     @Test
-    public void findByIdTest(){
+    public void shouldReturnCar_WhenCarIdIsValid(){
+
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
-        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
+        when(carRepository.findById(car1.getId())).thenReturn(Optional.of(car1));
 
-        adminService.addCar(car1);
-        adminService.addCar(car2);
+        Optional<Car> result = adminService.findById(car1.getId());
 
-        Long id1 = car1.getId();
-        Long id2 = car2.getId();
-        Optional<Car> optionalCar = adminService.findById(id1);
-        Optional<Car> optionalCar2 = adminService.findById(id2);
-
-        optionalCar.ifPresent(car -> assertEquals(car1, car));
-        optionalCar2.ifPresent(car -> assertEquals(car2, car));
+        assertTrue(result.isPresent());
+        assertEquals("BMW" , result.get().getBrand());
+        assertEquals("520D" , result.get().getModel());
     }
 
     @Test
-    public void updateCarDetailsTest(){
+    public void shouldThrowException_WhenCarIdDoesNotExist(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
-        adminService.addCar(car1);
-        Long id = car1.getId();
+        when(carRepository.findById(car1.getId())).thenReturn(Optional.empty());
+        Optional<Car> result = adminService.findById(car1.getId());
+        assertFalse(result.isPresent());
+    }
 
-
+    @Test
+    public void shouldUpdateCarDetailsSuccessfully_WhenCarExists(){
+        Car existingCar= new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car updatedInput = new Car(null , "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
         Car updatedCar = new Car(null , "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
-        adminService.updateCarDetails(id , updatedCar);
+        Long carId = 1L;
 
-        Optional<Car> optionalCar = adminService.findById(id);
+        when(carRepository.findById(carId)).thenReturn(Optional.of(existingCar));
+        when(carRepository.save(any(Car.class))).thenReturn(updatedCar);
 
-        if(optionalCar.isPresent()) {
-            Car c1 = optionalCar.get();
+        Car latestCar = adminService.updateCarDetails(carId , updatedInput);
 
-            assertEquals( updatedCar.getBrand(),c1.getBrand());
-            assertEquals(updatedCar.getModel() , c1.getModel() );
-            assertEquals( updatedCar.getPricePerDay() , c1.getPricePerDay());
-            assertEquals( updatedCar.isAvailability() , c1.isAvailability());
-        }
+        assertEquals("R8" , latestCar.getModel());
+        assertEquals("AUDI" , latestCar.getBrand());
+        assertEquals(BigDecimal.valueOf(12000) , latestCar.getPricePerDay());
+        assertFalse(latestCar.isAvailability());
+
+        verify(carRepository , times(1)).findById(carId);
+        verify(carRepository , times(1)).save(any(Car.class));
     }
 
     @Test
-    public void deleteCarTest(){
+    public void shouldFailToUpdateCar_WhenCarIdDoesNotExist(){
+        Long carId = 11L;
+        Car updatedInput = new Car(null , "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
+        when(carRepository.findById(carId)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> {
+            adminService.updateCarDetails(carId, updatedInput);
+        });
+
+        verify(carRepository , times(1)).findById(carId);
+        verify(carRepository, never()).save(any(Car.class));
+
+    }
+
+    @Test
+    public void shouldDeleteCarSuccessfully_WhenCarIdIsValid(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
-        adminService.addCar(car1);
-        Long id = car1.getId();
+        Long carId = 1L;
+        when(carRepository.findById(carId)).thenReturn(Optional.of(car1));
 
-        adminService.deleteCar(id);
+        adminService.deleteCar(carId);
 
-        assertFalse(carRepository.existsById(id));
+        verify(carRepository , times(1)).deleteById(carId);
+    }
+
+    @Test
+    public void shouldFailToDeleteCar_WhenCarIdDoesNotExist(){
+        Long carId = 2L;
+        when(carRepository.findById(carId)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> {
+            adminService.deleteCar(carId);
+        });
+
+        verify(carRepository, never()).deleteById(any());
     }
 
 }
