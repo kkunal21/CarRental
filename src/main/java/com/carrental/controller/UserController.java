@@ -39,7 +39,6 @@ public class UserController {
            BookCarResponse response =  bookingService.bookMyCar(request);
            return HttpResponse.created(response);
        }catch(RuntimeException e){
-           e.printStackTrace();
            return HttpResponse.badRequest();
         }
     }

@@ -26,16 +26,18 @@ public class PublicControllerTest {
     @Test
     public void shouldCreateNewUserSuccessfully_whenDataIsValid(){
 
-        HttpRequest<LoginRequest> request = HttpRequest.POST("/public/userSignUp" , new LoginRequest("kunal" , "kunal@123"));
+        HttpRequest<LoginRequest> request =
+                HttpRequest.POST
+                        ("/public/user-sign-up" , new LoginRequest("kunal" , "kunal@123"));
 
-        HttpResponse<String> response = client.toBlocking().exchange(request , String.class);
+        HttpResponse<String> response =
+                client
+                        .toBlocking()
+                        .exchange(request , String.class);
 
         assertEquals(HttpStatus.CREATED , response.getStatus());
         assertTrue(response.getBody().isPresent());
         assertEquals("User Created"  , response.getBody().get());
     }
-
-
-
 
 }

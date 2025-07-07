@@ -22,28 +22,32 @@ public class AdminService {
         this.carRepository=carRepository;
     }
 
+//  return list of all cars with their status as booked or Available
     public List<Car> getAllCars(){
         return carRepository.findAll();
     }
 
+//    return list of only Booked cars
     public List<Car> getBookedCars(){
         return carRepository.findByAvailability(false);
     }
 
+//    return list of only available cars
     public List<Car> getAvailableCars(){
         return carRepository.findByAvailability(true);
     }
 
-
+//  addCar allows the admin to add a new car
     public void addCar(Car car){
-
           carRepository.save(car);
     }
 
+//   searches for the car by id if it Exists
     public Optional<Car> findById(Long id){
         return carRepository.findById(id);
     }
 
+//    updateCar allows Admin to update the details of the existing car
     public Car updateCarDetails(Long id , Car updatedCar){
 
         Car oldCar = carRepository.findById(id)
@@ -57,10 +61,14 @@ public class AdminService {
             carRepository.update(oldCar);
             return oldCar;
     }
-
+//  allows the admin to delete the car by Id if it Exists in the DB
     public void deleteCar(Long id){
-//        Car car = carRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No Car found"));
+        Car car = getCarOrThrow(id);
         carRepository.deleteById(id);
+    }
+
+    private Car  getCarOrThrow(Long id){
+        return carRepository.findById(id).orElseThrow(()->new NoSuchElementException("Car Not Found"));
     }
 
 

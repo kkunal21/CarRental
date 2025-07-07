@@ -1,4 +1,4 @@
-package com.carrental.globalException;
+package com.carrental.exception;
 
 public class UserAlreadyExistsException extends RuntimeException{
     public UserAlreadyExistsException(String message ){

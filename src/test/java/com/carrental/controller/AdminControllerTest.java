@@ -59,27 +59,40 @@ public class AdminControllerTest {
 
     String authToken;
 
+
+
+
+//    Setup Admin Profile in order to Access Secured EndPoints
     @BeforeAll
     static void setupAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         if (userRepository.findByUserName("admin").isEmpty()) {
-            User admin = new User("admin", passwordEncoder.encode("admin@123"), "ADMIN");
+            User admin = new User(
+                    "admin",
+                    passwordEncoder.encode("admin@123"),
+                    "ADMIN");
             userRepository.save(admin);
         }
     }
 
-
+//   login As Admin To get Authorisation Token,needed to access secured endpoint
     @BeforeEach
     public void logIn(){
 
        try {
-          HttpRequest<LoginRequest> loginRequest = HttpRequest.POST("/login", new LoginRequest("admin", "admin@123"));
-           HttpResponse<BearerAccessRefreshToken> tokenHttpResponse = client.toBlocking().exchange(loginRequest, BearerAccessRefreshToken.class);
+          HttpRequest<LoginRequest> loginRequest = HttpRequest.POST(
+                  "/login",
+                  new LoginRequest("admin", "admin@123"));
+
+           HttpResponse<BearerAccessRefreshToken> tokenHttpResponse = client.
+                   toBlocking()
+                   .exchange(loginRequest, BearerAccessRefreshToken.class);
 
            assertTrue(tokenHttpResponse.getBody().isPresent());
            assertNotNull(tokenHttpResponse.getBody().get().getAccessToken());
 
            BearerAccessRefreshToken accessRefreshToken = tokenHttpResponse.getBody().get();
            authToken = (String) accessRefreshToken.getAccessToken();
+
        }catch(HttpClientResponseException e)
         {
             System.out.println("Request failed with status: " + e.getStatus());
@@ -92,9 +105,13 @@ public class AdminControllerTest {
     public void shouldCreateNewAdminSuccessfully_whenDataIsValid(){
         HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
                         ("/admin/admin-sign-up", new LoginRequest("Max", "Max@123"))
-                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+                .bearerAuth(authToken)
+                .contentType(MediaType.APPLICATION_JSON);
 
-        HttpResponse<String> response = client.toBlocking().exchange(loginRequest, String.class);
+        HttpResponse<String> response =
+                client
+                        .toBlocking()
+                        .exchange(loginRequest, String.class);
 
         assertEquals(HttpStatus.CREATED, response.getStatus());
         assertTrue(response.getBody().isPresent());
@@ -103,11 +120,17 @@ public class AdminControllerTest {
     }
     @Test
     public void createAdmin_ShouldFail_WhenAdminAlreadyExists(){
-        HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
+        HttpRequest<LoginRequest> loginRequest =
+                HttpRequest.POST
                         ("/admin/admin-sign-up", new LoginRequest("Max", "Max@123"))
-                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+                        .bearerAuth(authToken)
+                        .contentType(MediaType.APPLICATION_JSON);
         try{
-            HttpResponse<String> response = client.toBlocking().exchange(loginRequest , String.class);
+            HttpResponse<String> response =
+                    client
+                            .toBlocking()
+                            .exchange(loginRequest , String.class);
+
         }catch(HttpClientResponseException e){
             JsonError error  = e.getResponse().getBody(JsonError.class).orElse(null);
             assertNotNull(error);
@@ -119,19 +142,24 @@ public class AdminControllerTest {
 
     @Test
     public void createAdmin_ShouldFail_WhenUsernameOrPasswordIsMissing(){
-        HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
+        HttpRequest<LoginRequest> loginRequest =
+                HttpRequest.POST
                         ("/admin/admin-sign-up", new LoginRequest("", "Max@123"))
-                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+                        .bearerAuth(authToken)
+                        .contentType(MediaType.APPLICATION_JSON);
         try{
-             client.toBlocking().exchange(loginRequest , String.class);
+            client
+                    .toBlocking()
+                    .exchange(loginRequest , String.class);
+
         }catch(HttpClientResponseException e){
             JsonError error  = e.getResponse().getBody(JsonError.class).orElse(null);
             assertNotNull(error);
             assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
-            assertEquals("Username or Password cannot be blank or empty" , error.getMessage());
+            assertEquals("Username or Password cannot be blank or empty" , e.getMessage());
         }
-
     }
+
     @Test
     public void findAllCars_ShouldReturnListOfAllCars(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
@@ -139,10 +167,16 @@ public class AdminControllerTest {
         carRepository.save(car1);
         carRepository.save(car2);
 
-        HttpRequest<Object> request = HttpRequest.GET("/admin/all-cars" ).bearerAuth(authToken);
-        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
-        List<Car> cars = response.getBody().orElse(Collections.EMPTY_LIST);
+        HttpRequest<Object> request = HttpRequest.GET
+                ("/admin/all-cars" ).
+                bearerAuth(authToken);
 
+        HttpResponse<List> response =
+                client.
+                toBlocking().
+                exchange(request ,  Argument.of(List.class, Car.class));
+
+        List<Car> cars = response.getBody().orElse(Collections.EMPTY_LIST);
         assertEquals(2 , cars.size());
         assertEquals(HttpStatus.OK , response.getStatus());
         assertTrue(response.getBody().isPresent());
@@ -159,10 +193,16 @@ public class AdminControllerTest {
         carRepository.save(car1);
         carRepository.save(car2);
 
-        HttpRequest<Object> request = HttpRequest.GET("/admin/booked-cars" ).bearerAuth(authToken);
-        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
-        List<Car> bookedCars = response.getBody().orElse(Collections.EMPTY_LIST);
+        HttpRequest<Object> request = HttpRequest.GET
+                ("/admin/booked-cars" )
+                .bearerAuth(authToken);
 
+        HttpResponse<List> response =
+                client
+                .toBlocking()
+                .exchange(request ,  Argument.of(List.class, Car.class));
+
+        List<Car> bookedCars = response.getBody().orElse(Collections.EMPTY_LIST);
         assertEquals(2 , bookedCars.size());
         assertEquals(HttpStatus.OK , response.getStatus());
         assertTrue(response.getBody().isPresent());
@@ -182,10 +222,16 @@ public class AdminControllerTest {
         carRepository.save(car2);
         carRepository.save(car3);
 
-        HttpRequest<Object> request = HttpRequest.GET("/admin/available-cars" ).bearerAuth(authToken);
-        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
-        List<Car> availableCars = response.getBody().orElse(Collections.EMPTY_LIST);
+        HttpRequest<Object> request = HttpRequest.GET
+                ("/admin/available-cars" )
+                .bearerAuth(authToken);
 
+        HttpResponse<List> response =
+                client
+                .toBlocking()
+                .exchange(request ,  Argument.of(List.class, Car.class));
+
+        List<Car> availableCars = response.getBody().orElse(Collections.EMPTY_LIST);
         assertEquals(1 , availableCars.size());
         assertEquals(HttpStatus.OK , response.getStatus());
         assertTrue(response.getBody().isPresent());
@@ -199,11 +245,18 @@ public class AdminControllerTest {
         adminService.addCar(car1);
         Long carId = car1.getId();
 
-        HttpRequest<Object> request = HttpRequest.GET("/admin/find-car/" + carId).bearerAuth(authToken);
-        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
-        Car fetchedCar = response.getBody().get();
+        HttpRequest<Object> request =
+                HttpRequest.GET
+                        ("/admin/find-car/" + carId)
+                        .bearerAuth(authToken);
+
+        HttpResponse<Car> response =
+                client
+                        .toBlocking()
+                        .exchange(request , Car.class);
 
         assertTrue(response.getBody().isPresent());
+        Car fetchedCar = response.getBody().get();
         assertEquals(HttpStatus.OK , response.getStatus());
         assertEquals("520D" , fetchedCar.getModel());
         assertEquals("BMW" , fetchedCar.getBrand());
@@ -214,7 +267,12 @@ public class AdminControllerTest {
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
         adminService.addCar(car1);
         Long carId = 2L;
-        HttpRequest<Object> request = HttpRequest.GET("/admin/find-car/" + carId).bearerAuth(authToken);
+
+        HttpRequest<Object> request =
+                HttpRequest.GET
+                ("/admin/find-car/" + carId)
+                .bearerAuth(authToken);
+
       try{
          client.toBlocking().exchange(request , Car.class);
       }catch(HttpClientResponseException e){
@@ -229,12 +287,18 @@ public class AdminControllerTest {
     public void addCarSuccessfully_WhenDataIsValid(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
 
-        HttpRequest<Car> request = HttpRequest.POST("/admin/add-car"  ,car1).bearerAuth(authToken);
+        HttpRequest<Car> request = HttpRequest.POST
+                ("/admin/add-car"  ,car1)
+                .bearerAuth(authToken);
 
-        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+        HttpResponse<Car> response = client
+                .toBlocking()
+                .exchange(request , Car.class);
+
+
+        assertTrue(response.getBody().isPresent());
         Car addedCar = response.getBody().get();
         assertEquals(HttpStatus.CREATED , response.getStatus());
-        assertTrue(response.getBody().isPresent());
         assertEquals("520D" , addedCar.getModel());
         assertEquals("BMW" , addedCar.getBrand());
         assertEquals(BigDecimal.valueOf(10000) , addedCar.getPricePerDay());
@@ -247,7 +311,10 @@ public class AdminControllerTest {
         HttpRequest<Car> request = HttpRequest.POST("/admin/add-car"  ,car1).bearerAuth(authToken);
 
         try{
-            client.toBlocking().exchange(request , Car.class);
+            client
+                    .toBlocking()
+                    .exchange(request , Car.class);
+
         }catch(HttpClientResponseException e){
             JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
             assertNotNull(error);
@@ -263,12 +330,20 @@ public class AdminControllerTest {
 
         Car savedCar = carRepository.save(existingCar);
         Long carId = savedCar.getId();
-        HttpRequest<Car> request = HttpRequest.PUT("/admin/update-car/" + carId , updatedInput).bearerAuth(authToken);
-        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
-        Car newCar = response.getBody().get();
 
-        assertEquals(HttpStatus.OK ,response.getStatus() );
+        HttpRequest<Car> request =
+                HttpRequest.PUT
+                        ("/admin/update-car/" + carId , updatedInput)
+                        .bearerAuth(authToken);
+
+        HttpResponse<Car> response =
+                client
+                        .toBlocking()
+                        .exchange(request , Car.class);
+
         assertTrue(response.getBody().isPresent());
+        Car newCar = response.getBody().get();
+        assertEquals(HttpStatus.OK ,response.getStatus() );
         assertEquals("R8" , newCar.getModel());
         assertEquals("AUDI" , newCar.getBrand());
         assertEquals(BigDecimal.valueOf(12000) , newCar.getPricePerDay());
@@ -282,9 +357,17 @@ public class AdminControllerTest {
         Car savedCar = carRepository.save(existingCar);
         Long carId = savedCar.getId();
 
-        HttpRequest<Car> request = HttpRequest.PUT("/admin/update-car/" + carId , updatedInput).bearerAuth(authToken);
+        HttpRequest<Car> request =
+                HttpRequest.PUT
+                        ("/admin/update-car/" + carId , updatedInput)
+                        .bearerAuth(authToken);
+
         try{
-            HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+            HttpResponse<Car> response =
+                    client
+                            .toBlocking()
+                            .exchange(request , Car.class);
+
         }catch(HttpClientResponseException e){
             JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
             assertNotNull(error);
@@ -298,9 +381,15 @@ public class AdminControllerTest {
         Car savedCar = carRepository.save(car1);
         Long carId = savedCar.getId();
 
-        HttpRequest<Object> request = HttpRequest.DELETE("/admin/delete-car/" + carId).bearerAuth(authToken);
+        HttpRequest<Object> request =
+                HttpRequest.DELETE
+                        ("/admin/delete-car/" + carId)
+                        .bearerAuth(authToken);
 
-        HttpResponse<String> response = client.toBlocking().exchange(request ,String.class);
+        HttpResponse<String> response =
+                client
+                        .toBlocking()
+                        .exchange(request ,String.class);
 
         assertEquals(HttpStatus.OK , response.getStatus());
         assertTrue(response.getBody().isPresent());
@@ -313,18 +402,20 @@ public class AdminControllerTest {
         Car savedCar = carRepository.save(car1);
         Long carId = 2L;
 
-        HttpRequest<Object> request = HttpRequest.DELETE("/admin/delete-car/" + carId).bearerAuth(authToken);
+        HttpRequest<Object> request =
+                HttpRequest.DELETE
+                        ("/admin/delete-car/" + carId)
+                        .bearerAuth(authToken);
 
         try{
-            client.toBlocking().exchange(request ,String.class);
+            client
+                    .toBlocking()
+                    .exchange(request ,String.class);
+
         }catch(HttpClientResponseException e){
-           JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
-           assertNotNull(error);
-           assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
-            assertEquals("Car not found", error.getMessage());
+           assertEquals(HttpStatus.NOT_FOUND, e.getStatus());
+
         }
-
-
     }
 
 

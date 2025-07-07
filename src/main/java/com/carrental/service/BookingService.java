@@ -4,8 +4,8 @@ import com.carrental.dto.BookCarRequest;
 import com.carrental.dto.BookCarResponse;
 import com.carrental.entity.Booking;
 import com.carrental.entity.Car;
-import com.carrental.globalException.CannotReturnCarWithoutBooking;
-import com.carrental.globalException.CarAlreadyBookedByAnotherUser;
+import com.carrental.exception.CannotReturnCarWithoutBooking;
+import com.carrental.exception.CarAlreadyBookedByAnotherUser;
 import com.carrental.repository.BookingRepository;
 import com.carrental.repository.CarRepository;
 import jakarta.inject.Inject;
@@ -30,7 +30,7 @@ public class BookingService {
 
     }
 
-
+// bookMyCar will book car if car exist and is available
     @Transactional
     public BookCarResponse bookMyCar(BookCarRequest request) {
         Car car = getAvailableCar(request.getCarId());
@@ -55,6 +55,7 @@ public class BookingService {
         );
     }
 
+//    check if a car exists in repo and is available for booking
     private Car getAvailableCar(Long carId) {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new NoSuchElementException("No Car Found"));
@@ -65,10 +66,12 @@ public class BookingService {
         return car;
     }
 
+//    calculate the billAmount for the no of days car is being booked
     private BigDecimal calculateBill(Car car, Long  noOfDays) {
         return car.getPricePerDay().multiply(BigDecimal.valueOf(noOfDays));
     }
 
+//    returnCar will return a car if its being booked previously
     public void returnCar(Long id) {
         Car car = getBookedCarById(id);
         car.setAvailability(true);
@@ -76,6 +79,7 @@ public class BookingService {
     }
 
 
+//    getBookedCar checks if the carId exists and it was booked earlier
     private Car getBookedCarById(Long id) {
         Car car = carRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Car not found"));
@@ -83,7 +87,6 @@ public class BookingService {
         if (car.isAvailability()) {
             throw new CannotReturnCarWithoutBooking("This car was not booked, so it cannot be returned.");
         }
-
         return car;
     }
 

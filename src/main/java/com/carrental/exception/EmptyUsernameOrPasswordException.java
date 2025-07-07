@@ -1,4 +1,4 @@
-package com.carrental.globalException;
+package com.carrental.exception;
 
 public class EmptyUsernameOrPasswordException extends RuntimeException{
     public EmptyUsernameOrPasswordException(String message){

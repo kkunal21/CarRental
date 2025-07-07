@@ -27,20 +27,30 @@ public class BcryptPasswordServiceTest {
 
     @Test
     public void shouldEncodePasswordUsingBCrypt(){
+//      create mock data
         CharSequence rawPassword = "kunal@123";
         String hashed = "hashed123";
+
+//      When
         when(passwordEncoder.encode(rawPassword)).thenReturn(hashed);
         String encodedPassword = bcryptPasswordService.encode(rawPassword);
+
+//      assertions
         assertNotNull(encodedPassword);
         assertEquals(hashed , encodedPassword);
     }
 
     @Test
     public void shouldMatchRawPasswordWithEncodedPassword(){
+//      create mock data
         CharSequence rawPassword = "kunal@123";
         String hashed = "hashed123";
+
+//      when
         when(passwordEncoder.matches(rawPassword , hashed)).thenReturn(true);
         boolean result = bcryptPasswordService.matches(rawPassword , hashed);
+
+//      assertions
         assertTrue(result);
 
     }

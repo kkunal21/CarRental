@@ -36,9 +36,8 @@ public class AdminController {
     }
     @Post("/admin-sign-up")
     public HttpResponse<String> createNewAdmin(@Body @Valid LoginRequest request) {
-        userService.createNewAdmin(request);
-        return HttpResponse.created("Admin Created Successfully");
-
+            userService.createNewAdmin(request);
+            return HttpResponse.created("Admin Created Successfully");
     }
 
     @Get("/all-cars")
