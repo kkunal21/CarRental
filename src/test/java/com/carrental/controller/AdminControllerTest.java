@@ -1,0 +1,334 @@
+package com.carrental.controller;
+
+import com.carrental.dto.LoginRequest;
+import com.carrental.entity.Car;
+import com.carrental.entity.User;
+import com.carrental.repository.CarRepository;
+import com.carrental.repository.UserRepository;
+import com.carrental.service.AdminService;
+import com.carrental.service.BcryptPasswordService;
+import com.carrental.service.UserService;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.type.Argument;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.client.HttpClient;
+import io.micronaut.http.client.annotation.Client;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
+import io.micronaut.http.hateoas.JsonError;
+import io.micronaut.security.token.render.BearerAccessRefreshToken;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+@MicronautTest(transactional = false)
+public class AdminControllerTest {
+
+    @Inject
+     AdminService adminService;
+
+    @Inject
+    UserService userService;
+
+    @Inject
+    BcryptPasswordService passwordEncoder;
+
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    CarRepository carRepository;
+
+    @Inject
+    @Client("/")
+    HttpClient client;
+
+    String authToken;
+
+    @BeforeAll
+    static void setupAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        if (userRepository.findByUserName("admin").isEmpty()) {
+            User admin = new User("admin", passwordEncoder.encode("admin@123"), "ADMIN");
+            userRepository.save(admin);
+        }
+    }
+
+
+    @BeforeEach
+    public void logIn(){
+
+       try {
+          HttpRequest<LoginRequest> loginRequest = HttpRequest.POST("/login", new LoginRequest("admin", "admin@123"));
+           HttpResponse<BearerAccessRefreshToken> tokenHttpResponse = client.toBlocking().exchange(loginRequest, BearerAccessRefreshToken.class);
+
+           assertTrue(tokenHttpResponse.getBody().isPresent());
+           assertNotNull(tokenHttpResponse.getBody().get().getAccessToken());
+
+           BearerAccessRefreshToken accessRefreshToken = tokenHttpResponse.getBody().get();
+           authToken = (String) accessRefreshToken.getAccessToken();
+       }catch(HttpClientResponseException e)
+        {
+            System.out.println("Request failed with status: " + e.getStatus());
+            System.out.println("ResponseBody :" + e.getResponse().getBody(String.class).orElse("No body"));
+            throw e;
+        }
+    }
+
+    @Test
+    public void shouldCreateNewAdminSuccessfully_whenDataIsValid(){
+        HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
+                        ("/admin/admin-sign-up", new LoginRequest("Max", "Max@123"))
+                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+
+        HttpResponse<String> response = client.toBlocking().exchange(loginRequest, String.class);
+
+        assertEquals(HttpStatus.CREATED, response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("Admin Created Successfully", response.getBody().get());
+
+    }
+    @Test
+    public void createAdmin_ShouldFail_WhenAdminAlreadyExists(){
+        HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
+                        ("/admin/admin-sign-up", new LoginRequest("Max", "Max@123"))
+                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+        try{
+            HttpResponse<String> response = client.toBlocking().exchange(loginRequest , String.class);
+        }catch(HttpClientResponseException e){
+            JsonError error  = e.getResponse().getBody(JsonError.class).orElse(null);
+            assertNotNull(error);
+            assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+            assertEquals("Admin Already Exist , Try singing in..." , error.getMessage());
+        }
+    }
+
+
+    @Test
+    public void createAdmin_ShouldFail_WhenUsernameOrPasswordIsMissing(){
+        HttpRequest<LoginRequest> loginRequest = HttpRequest.POST
+                        ("/admin/admin-sign-up", new LoginRequest("", "Max@123"))
+                .bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);
+        try{
+             client.toBlocking().exchange(loginRequest , String.class);
+        }catch(HttpClientResponseException e){
+            JsonError error  = e.getResponse().getBody(JsonError.class).orElse(null);
+            assertNotNull(error);
+            assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+            assertEquals("Username or Password cannot be blank or empty" , error.getMessage());
+        }
+
+    }
+    @Test
+    public void findAllCars_ShouldReturnListOfAllCars(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), true);
+        carRepository.save(car1);
+        carRepository.save(car2);
+
+        HttpRequest<Object> request = HttpRequest.GET("/admin/all-cars" ).bearerAuth(authToken);
+        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
+        List<Car> cars = response.getBody().orElse(Collections.EMPTY_LIST);
+
+        assertEquals(2 , cars.size());
+        assertEquals(HttpStatus.OK , response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("BMW" , cars.getFirst().getBrand());
+        assertEquals("AUDI" , cars.get(1).getBrand());
+    }
+
+    @Test
+    public void shouldReturnListOfBookedCars_WhenCarsAreBooked(){
+
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
+
+        carRepository.save(car1);
+        carRepository.save(car2);
+
+        HttpRequest<Object> request = HttpRequest.GET("/admin/booked-cars" ).bearerAuth(authToken);
+        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
+        List<Car> bookedCars = response.getBody().orElse(Collections.EMPTY_LIST);
+
+        assertEquals(2 , bookedCars.size());
+        assertEquals(HttpStatus.OK , response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("BMW" , bookedCars.getFirst().getBrand());
+        assertEquals("AUDI" , bookedCars.get(1).getBrand());
+    }
+
+
+    @Test
+    public void shouldReturnListOfAvailableCars_WhenCarsAreAvailable(){
+
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
+        Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
+        Car car3 = new Car(null, "Q7" , "AUDI-Q" , BigDecimal.valueOf(12000), true);
+
+        carRepository.save(car1);
+        carRepository.save(car2);
+        carRepository.save(car3);
+
+        HttpRequest<Object> request = HttpRequest.GET("/admin/available-cars" ).bearerAuth(authToken);
+        HttpResponse<List> response = client.toBlocking().exchange(request ,  Argument.of(List.class, Car.class));
+        List<Car> availableCars = response.getBody().orElse(Collections.EMPTY_LIST);
+
+        assertEquals(1 , availableCars.size());
+        assertEquals(HttpStatus.OK , response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("AUDI-Q" , availableCars.getFirst().getBrand());
+
+    }
+
+    @Test
+    public void findCarById_shouldReturnCar_WhenCarExists(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        adminService.addCar(car1);
+        Long carId = car1.getId();
+
+        HttpRequest<Object> request = HttpRequest.GET("/admin/find-car/" + carId).bearerAuth(authToken);
+        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+        Car fetchedCar = response.getBody().get();
+
+        assertTrue(response.getBody().isPresent());
+        assertEquals(HttpStatus.OK , response.getStatus());
+        assertEquals("520D" , fetchedCar.getModel());
+        assertEquals("BMW" , fetchedCar.getBrand());
+    }
+
+    @Test
+    public void findCarById_shouldThrowException_WhenCarDoesNotExists(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        adminService.addCar(car1);
+        Long carId = 2L;
+        HttpRequest<Object> request = HttpRequest.GET("/admin/find-car/" + carId).bearerAuth(authToken);
+      try{
+         client.toBlocking().exchange(request , Car.class);
+      }catch(HttpClientResponseException e){
+          JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
+          assertNull(error);
+          assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+      }
+
+    }
+
+    @Test
+    public void addCarSuccessfully_WhenDataIsValid(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+
+        HttpRequest<Car> request = HttpRequest.POST("/admin/add-car"  ,car1).bearerAuth(authToken);
+
+        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+        Car addedCar = response.getBody().get();
+        assertEquals(HttpStatus.CREATED , response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("520D" , addedCar.getModel());
+        assertEquals("BMW" , addedCar.getBrand());
+        assertEquals(BigDecimal.valueOf(10000) , addedCar.getPricePerDay());
+    }
+
+    @Test
+    public void addCar_FailsToAddCar_WhenDataIsInValid(){
+        Car car1 = new Car( null ," " , " " , BigDecimal.valueOf(10000), true);
+
+        HttpRequest<Car> request = HttpRequest.POST("/admin/add-car"  ,car1).bearerAuth(authToken);
+
+        try{
+            client.toBlocking().exchange(request , Car.class);
+        }catch(HttpClientResponseException e){
+            JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
+            assertNotNull(error);
+            assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+
+        }
+    }
+
+    @Test
+    public void updateCar_Successfully_WhenDataIsValid(){
+        Car existingCar = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car updatedInput = new Car(null , "R8" , "AUDI" , BigDecimal.valueOf(12000), true);
+
+        Car savedCar = carRepository.save(existingCar);
+        Long carId = savedCar.getId();
+        HttpRequest<Car> request = HttpRequest.PUT("/admin/update-car/" + carId , updatedInput).bearerAuth(authToken);
+        HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+        Car newCar = response.getBody().get();
+
+        assertEquals(HttpStatus.OK ,response.getStatus() );
+        assertTrue(response.getBody().isPresent());
+        assertEquals("R8" , newCar.getModel());
+        assertEquals("AUDI" , newCar.getBrand());
+        assertEquals(BigDecimal.valueOf(12000) , newCar.getPricePerDay());
+    }
+
+    @Test
+    public void updateCar_ShouldFail_WhenDataIsInValid(){
+        Car existingCar = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car updatedInput = new Car(null , "" , "AUDI" , BigDecimal.valueOf(12000), true);
+
+        Car savedCar = carRepository.save(existingCar);
+        Long carId = savedCar.getId();
+
+        HttpRequest<Car> request = HttpRequest.PUT("/admin/update-car/" + carId , updatedInput).bearerAuth(authToken);
+        try{
+            HttpResponse<Car> response = client.toBlocking().exchange(request , Car.class);
+        }catch(HttpClientResponseException e){
+            JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
+            assertNotNull(error);
+            assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+        }
+    }
+
+    @Test
+    public void deleteCar_ShouldDeleteCar_IfIdExists(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car savedCar = carRepository.save(car1);
+        Long carId = savedCar.getId();
+
+        HttpRequest<Object> request = HttpRequest.DELETE("/admin/delete-car/" + carId).bearerAuth(authToken);
+
+        HttpResponse<String> response = client.toBlocking().exchange(request ,String.class);
+
+        assertEquals(HttpStatus.OK , response.getStatus());
+        assertTrue(response.getBody().isPresent());
+        assertEquals("Car Deleted" , response.getBody().get());
+    }
+
+    @Test
+    public void deleteCar_ShouldFail_IfIdDoesNotExists(){
+        Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
+        Car savedCar = carRepository.save(car1);
+        Long carId = 2L;
+
+        HttpRequest<Object> request = HttpRequest.DELETE("/admin/delete-car/" + carId).bearerAuth(authToken);
+
+        try{
+            client.toBlocking().exchange(request ,String.class);
+        }catch(HttpClientResponseException e){
+           JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
+           assertNotNull(error);
+           assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
+            assertEquals("Car not found", error.getMessage());
+        }
+
+
+    }
+
+
+
+
+
+}

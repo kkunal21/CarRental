@@ -1,15 +1,22 @@
 package com.carrental.dto;
 
-import jakarta.inject.Inject;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.inject.Singleton;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Singleton
+@Serdeable
+@NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequest {
 
-    String userName;
+    @NotBlank
+    String username;
+    @NotBlank
     String Password;
+
 }

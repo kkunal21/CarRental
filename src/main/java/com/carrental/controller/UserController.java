@@ -28,22 +28,23 @@ public class UserController {
         this.bookingService = bookingService;
     }
 
-    @Get("/availableCars")
+    @Get("/available-cars")
     public List<Car> allAvailableCars(){
         return userService.getAllAvailableCars();
     }
 
-    @Post("/bookCar")
+    @Post("/book-car")
     public HttpResponse<BookCarResponse> bookCar(@Body @Valid BookCarRequest request) {
        try{
            BookCarResponse response =  bookingService.bookMyCar(request);
            return HttpResponse.created(response);
        }catch(RuntimeException e){
+           e.printStackTrace();
            return HttpResponse.badRequest();
         }
     }
 
-    @Post("/returnCar/{id}")
+    @Post("/return-car/{id}")
     public HttpResponse<String> returnCar(@PathVariable Long id){
         try{
            bookingService.returnCar(id);

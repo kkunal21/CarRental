@@ -47,7 +47,6 @@ public class AuthenticationProviderUserPassword<B> implements HttpRequestAuthent
         if(!valid){
             return AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH);
         }
-
         return AuthenticationResponse.success(authRequest.getIdentity() , Collections.singleton(user.getRole()));
 
     }

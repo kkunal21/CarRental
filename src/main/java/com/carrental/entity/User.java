@@ -9,12 +9,14 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 @Entity
 @Data
 @Singleton
 @Serdeable
+@NoArgsConstructor
 @AllArgsConstructor
 public class User {
 
@@ -23,6 +25,7 @@ public class User {
     Long id;
     @NotBlank
     String userName;
+    @NotBlank
     String password;
     String role;
 

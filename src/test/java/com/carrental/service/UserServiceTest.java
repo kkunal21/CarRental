@@ -3,14 +3,11 @@ package com.carrental.service;
 import com.carrental.dto.LoginRequest;
 import com.carrental.entity.User;
 import com.carrental.repository.UserRepository;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.OngoingStubbing;
 
 import java.util.Optional;
 
@@ -97,7 +94,7 @@ public class UserServiceTest {
         User user1 = new User( "kunal" , "kunal@123" , "USER");
         LoginRequest request = new LoginRequest( "kunal" , "kunal@123" );
 
-        String userName = request.getUserName();
+        String userName = request.getUsername();
 
         when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user1));
 

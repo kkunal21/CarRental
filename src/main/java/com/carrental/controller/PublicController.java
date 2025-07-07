@@ -24,8 +24,8 @@ public class PublicController {
         this.userService = userService;
     }
 
-    @Post("/userSignUp")
-    public HttpResponse<?> createNewUser(@Body LoginRequest loginRequest) {
+    @Post("/user-sign-up")
+    public HttpResponse<String> createNewUser(@Body LoginRequest loginRequest) {
         userService.createNewUser(loginRequest);
         return HttpResponse.created("User Created");
 

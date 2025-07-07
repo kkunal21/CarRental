@@ -36,6 +36,7 @@ public class AdminService {
 
 
     public void addCar(Car car){
+
           carRepository.save(car);
     }
 
@@ -53,12 +54,12 @@ public class AdminService {
             oldCar.setPricePerDay(updatedCar.getPricePerDay());
             oldCar.setAvailability(updatedCar.isAvailability());
 
-            carRepository.save(oldCar);
+            carRepository.update(oldCar);
             return oldCar;
     }
 
     public void deleteCar(Long id){
-        Car car = carRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No Car found"));
+//        Car car = carRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No Car found"));
         carRepository.deleteById(id);
     }
 
