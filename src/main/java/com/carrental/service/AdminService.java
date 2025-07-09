@@ -60,15 +60,23 @@ public class AdminService {
             carRepository.update(oldCar);
             return oldCar;
     }
-//  allows the admin to delete the car by Id if it Exists in the DB
-    public void deleteCar(Long id){
-        Car car = getCarOrThrow(id);
-        carRepository.deleteById(id);
-    }
-
-    private Car  getCarOrThrow(Long id){
+    private Car getCarOrThrow(Long id){
         return carRepository.findById(id).orElseThrow(()->new NoSuchElementException("Car Not Found"));
     }
 
+
+//  allows the admin to delete the car by id if it Exists in the DB
+    public void deleteCar(Long id){
+        assertCarExists(id);
+        carRepository.deleteById(id);
+    }
+
+//    just check if car exist before deleting
+    private void assertCarExists(Long id) {
+        if (!carRepository.existsById(id)) {
+            throw new NoSuchElementException("Car Not Found with id: " + id);
+        }
+
+    }
 
 }
