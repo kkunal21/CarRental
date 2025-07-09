@@ -62,29 +62,42 @@ public class AdminControllerTest {
 
 
 
+
+
 //    Setup Admin Profile in order to Access Secured EndPoints
     @BeforeAll
     static void setupAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        if (userRepository.findByUserName("admin").isEmpty()) {
-            User admin = new User(
-                    "admin",
+        if (userRepository.findByUserName("mainAdmin").isEmpty()) {
+            User user = new User(
+                    "mainAdmin",
                     passwordEncoder.encode("admin@123"),
                     "ADMIN");
-            userRepository.save(admin);
+            userRepository.save(user);
         }
     }
 
-//   login As Admin To get Authorisation Token,needed to access secured endpoint
+    @BeforeEach
+    void setup() {
+        // Delete all users except the admin (e.g. "mainAdmin")
+        userRepository.findAll().stream()
+                .filter(user -> !user.getUserName().equals("mainAdmin"))
+                .forEach(user -> userRepository.deleteById(user.getId()));
+        carRepository.deleteAll();
+    }
+
+
+    //   login As Admin To get Authorisation Token,needed to access secured endpoint
     @BeforeEach
     public void logIn(){
 
        try {
           HttpRequest<LoginRequest> loginRequest = HttpRequest.POST(
                   "/login",
-                  new LoginRequest("admin", "admin@123"));
+                  new LoginRequest("mainAdmin", "admin@123"));
 
-           HttpResponse<BearerAccessRefreshToken> tokenHttpResponse = client.
-                   toBlocking()
+           HttpResponse<BearerAccessRefreshToken> tokenHttpResponse =
+                   client
+                   .toBlocking()
                    .exchange(loginRequest, BearerAccessRefreshToken.class);
 
            assertTrue(tokenHttpResponse.getBody().isPresent());
@@ -126,7 +139,6 @@ public class AdminControllerTest {
                         .bearerAuth(authToken)
                         .contentType(MediaType.APPLICATION_JSON);
         try{
-            HttpResponse<String> response =
                     client
                             .toBlocking()
                             .exchange(loginRequest , String.class);
@@ -156,7 +168,7 @@ public class AdminControllerTest {
             JsonError error  = e.getResponse().getBody(JsonError.class).orElse(null);
             assertNotNull(error);
             assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
-            assertEquals("Username or Password cannot be blank or empty" , e.getMessage());
+            assertEquals("Username or Password cannot be blank or empty" , error.getMessage());
         }
     }
 
@@ -164,8 +176,8 @@ public class AdminControllerTest {
     public void findAllCars_ShouldReturnListOfAllCars(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
         Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), true);
-        carRepository.save(car1);
-        carRepository.save(car2);
+        adminService.addCar(car1);
+        adminService.addCar(car2);
 
         HttpRequest<Object> request = HttpRequest.GET
                 ("/admin/all-cars" ).
@@ -399,7 +411,7 @@ public class AdminControllerTest {
     @Test
     public void deleteCar_ShouldFail_IfIdDoesNotExists(){
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
-        Car savedCar = carRepository.save(car1);
+         carRepository.save(car1);
         Long carId = 2L;
 
         HttpRequest<Object> request =

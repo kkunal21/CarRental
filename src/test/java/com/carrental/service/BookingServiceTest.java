@@ -87,7 +87,7 @@ public class BookingServiceTest {
 //      assertions
         RuntimeException exception = assertThrows(RuntimeException.class,()-> bookingService.bookMyCar(request));
         assertFalse(car1.isAvailability());
-        assertEquals("Car not Available" , exception.getMessage());
+        assertEquals("Car is booked by some other user, please try booking another car" , exception.getMessage());
         verify(carRepository, times(1)).findById(carId);
 
     }
