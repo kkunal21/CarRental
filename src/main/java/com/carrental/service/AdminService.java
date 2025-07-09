@@ -50,8 +50,7 @@ public class AdminService {
 //    updateCar allows Admin to update the details of the existing car
     public Car updateCarDetails(Long id , Car updatedCar){
 
-        Car oldCar = carRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Car not found"));
+        Car oldCar = getCarOrThrow(id);
 
             oldCar.setBrand(updatedCar.getBrand());
             oldCar.setModel(updatedCar.getModel());
