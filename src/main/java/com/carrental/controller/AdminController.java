@@ -66,15 +66,15 @@ public class AdminController {
     }
 
     @Post("/add-car")
-    public HttpResponse<?> addCar(@Body @Valid Car car){
+    public HttpResponse<Car> addCar(@Body @Valid Car car){
           adminService.addCar(car);
-          return HttpResponse.created(car );
+          return HttpResponse.created( car);
     }
 
 
 
     @Put("/update-car/{id}")
-    public HttpResponse<?> updateCarDetails(@PathVariable Long id , @Body @Valid Car car ){
+    public HttpResponse<Car > updateCarDetails(@PathVariable Long id , @Body @Valid Car car ){
           try{
               Car newCar = adminService.updateCarDetails(id , car);
               return HttpResponse.ok(newCar) ;
@@ -84,7 +84,7 @@ public class AdminController {
     }
 
     @Delete("/delete-car/{id}")
-    public HttpResponse<?> deleteCar(@PathVariable Long id){
+    public HttpResponse<String> deleteCar(@PathVariable Long id){
         try{
             adminService.deleteCar(id);
             return HttpResponse.ok("Car Deleted");
