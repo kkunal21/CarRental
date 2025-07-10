@@ -174,8 +174,9 @@ public class AdminServiceTest {
 //      create mock data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
         Long carId = 1L;
+        car1.setId(carId);
 
-        when(carRepository.findById(carId)).thenReturn(Optional.of(car1));
+        when(carRepository.existsById(carId)).thenReturn(true);
 
         adminService.deleteCar(carId);
 
