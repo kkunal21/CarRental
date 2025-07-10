@@ -76,7 +76,5 @@ public class AdminService {
         if (!carRepository.existsById(id)) {
             throw new NoSuchElementException("Car Not Found with id: " + id);
         }
-
     }
-
 }

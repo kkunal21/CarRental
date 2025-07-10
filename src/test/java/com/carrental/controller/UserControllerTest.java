@@ -64,10 +64,12 @@ public class UserControllerTest {
     public void logIn(){
 
         try {
+//            request
             HttpRequest<LoginRequest> loginRequest =
                     HttpRequest.POST
                             ("/login", new LoginRequest("kunal", "kunal@123"));
 
+//            response
             HttpResponse<BearerAccessRefreshToken> tokenHttpResponse =
                     client
                             .toBlocking()
@@ -75,6 +77,8 @@ public class UserControllerTest {
 
             assertTrue(tokenHttpResponse.getBody().isPresent());
             assertNotNull(tokenHttpResponse.getBody().get().getAccessToken());
+
+//            Access token is extracted
             BearerAccessRefreshToken accessRefreshToken = tokenHttpResponse.getBody().get();
             authToken = (String) accessRefreshToken.getAccessToken();
         }catch(HttpClientResponseException e)
@@ -88,6 +92,8 @@ public class UserControllerTest {
 
     @Test
     public void availableCars_ShouldReturnListOfAvailableCars(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
         Car car2 = new Car(null, "R8" , "AUDI" , BigDecimal.valueOf(12000), false);
         Car car3 = new Car(null, "RR" , "LANDROVER" , BigDecimal.valueOf(12000), true);
@@ -95,11 +101,13 @@ public class UserControllerTest {
         carRepository.save(car2);
         carRepository.save(car3);
 
+//        request
         HttpRequest<Object> request =
                 HttpRequest.GET
                         ("/user/available-cars" )
                         .bearerAuth(authToken);
 
+//        response
         HttpResponse<List> response =
                 client
                         .toBlocking()
@@ -115,17 +123,21 @@ public class UserControllerTest {
 
     @Test
     public void bookCar_ShouldBookCarWhenRequestIsValid(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
         Car savedCar = carRepository.save(car1);
         Long carId = savedCar.getId();
         BookCarRequest bookCarRequest = new BookCarRequest(carId , 1L , 9L);
 
+//        request
         HttpRequest<BookCarRequest> request =
                 HttpRequest.POST
                         ("/user/book-car" , bookCarRequest)
                         .bearerAuth(authToken)
                         .contentType(MediaType.APPLICATION_JSON);;
 
+//         response
         HttpResponse<BookCarResponse> response =
                 client
                         .toBlocking()
@@ -141,14 +153,21 @@ public class UserControllerTest {
 
     @Test
     public void bookCar_ShouldFailToBookCarWhenCarIdDoesNotExist(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), true);
          carRepository.save(car1);
         Long carId = 3L;
         BookCarRequest bookCarRequest = new BookCarRequest(carId , 1L , 9L);
 
+//        request
         HttpRequest<BookCarRequest> request = HttpRequest.POST("/user/book-car" , bookCarRequest).bearerAuth(authToken).contentType(MediaType.APPLICATION_JSON);;
         try{
-            client.toBlocking().exchange(request , BookCarResponse.class);
+
+//            response
+            client
+                    .toBlocking()
+                    .exchange(request , BookCarResponse.class);
         }catch(HttpClientResponseException e){
 //            JsonError error = e.getResponse().getBody(JsonError.class).orElse(null);
             assertEquals(HttpStatus.BAD_REQUEST , e.getStatus());
@@ -157,17 +176,21 @@ public class UserControllerTest {
 
     @Test
     public void bookCar_ShouldFailToBookCarWhenCarIsNotAvailable(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
         carRepository.save(car1);
         Long carId = 1L;
         BookCarRequest bookCarRequest = new BookCarRequest(carId , 1L , 9L);
 
+//        request
         HttpRequest<BookCarRequest> request =
                 HttpRequest.POST
                         ("/user/book-car" , bookCarRequest)
                         .bearerAuth(authToken)
                         .contentType(MediaType.APPLICATION_JSON);;
         try{
+//            response
             client
                     .toBlocking()
                     .exchange(request , BookCarResponse.class);
@@ -179,13 +202,19 @@ public class UserControllerTest {
 
     @Test
     public void returnCar_shouldSuccessfullyReturnCar(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
         carRepository.save(car1);
         Long carId = car1.getId();
 
+//        request
         HttpRequest<Object> request = HttpRequest.POST("/user/return-car/" + carId, null)
                 .bearerAuth(authToken);
-        HttpResponse<String> response = client.toBlocking().exchange(request ,String.class);
+
+//        response
+        HttpResponse<String> response =
+                client.toBlocking().exchange(request ,String.class);
 
         assertTrue(response.getBody().isPresent());
         assertEquals(HttpStatus.OK , response.getStatus());
@@ -194,15 +223,20 @@ public class UserControllerTest {
     }
     @Test
     public void returnCar_shouldThrowExceptionWhenCarIsNotBooked(){
+
+//        create data
         Car car1 = new Car( null ,"520D" , "BMW" , BigDecimal.valueOf(10000), false);
         carRepository.save(car1);
         Long carId = car1.getId();
 
+
+//        request
         HttpRequest<Object> request =
                 HttpRequest.POST
                         ("/user/return-car/" + carId, null)
                         .bearerAuth(authToken);
         try{
+//            response
             client
                     .toBlocking()
                     .exchange(request ,String.class);

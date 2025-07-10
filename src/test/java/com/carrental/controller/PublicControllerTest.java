@@ -26,10 +26,12 @@ public class PublicControllerTest {
     @Test
     public void shouldCreateNewUserSuccessfully_whenDataIsValid(){
 
+//        request
         HttpRequest<LoginRequest> request =
                 HttpRequest.POST
                         ("/public/user-sign-up" , new LoginRequest("kunal" , "kunal@123"));
 
+//        response
         HttpResponse<String> response =
                 client
                         .toBlocking()
