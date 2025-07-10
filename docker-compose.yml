@@ -5,28 +5,34 @@ services:
     image: mysql:8
     container_name: mysql-db
     restart: always
-    ports:
-      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root@123
       MYSQL_DATABASE: car_rental_db
+    ports:
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 
   app:
     build: .
     container_name: carRental_app
     depends_on:
-      - mysql
-    ports:
-      - "8080:8080"
+      mysql:
+        condition: service_healthy
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: car_rental_db
       DB_USER : root
       DB_PASSWORD: root@123
+    ports:
+      - "8080:8080"
 
 volumes:
   mysql_data:
